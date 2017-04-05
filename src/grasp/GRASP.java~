@@ -1,0 +1,803 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import static java.lang.Math.ceil;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Random;
+
+/**
+ *
+ * @author Michael
+ */
+public class GRASP {
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws FileNotFoundException, IOException {
+        // TODO code application logic here
+//        long tatu=0;
+//        long tdiv=0;
+//        print(args.length);
+        long tempoInicio = System.currentTimeMillis();  
+        FileInputStream stream = new FileInputStream(args[0]);
+        InputStreamReader reader = new InputStreamReader(stream);
+        BufferedReader br = new BufferedReader(reader);
+        String linha = br.readLine();
+        
+        int num_nos=0;
+        int pesos_nos[] = new int[1000];
+        String string_aux[];
+        
+        string_aux=linha.split(" ");
+        num_nos=Integer.parseInt(string_aux[0]);
+        int num_arestas=Integer.parseInt(string_aux[1]);
+        
+        linha = br.readLine();
+        if(linha.equals("-1")){
+            for(int i=0;i<num_nos;i++){
+                linha = br.readLine();
+                string_aux=linha.split(" ");
+                pesos_nos[i]=Integer.parseInt(string_aux[2]);
+            }
+        }else{
+            print("arquvo em formato inválido");
+        }
+        
+        linha = br.readLine();
+        
+        int arestas[][] = new int [num_nos][num_nos];
+        int grau[]=new int[num_nos];
+        for(int i=0;i<num_nos;i++){
+            grau[i]=0;
+            for(int j=0;j<num_nos;j++){
+                arestas[i][j]=-1;
+            }
+        }
+        
+        if(linha.equals("-1")){
+            int origem;
+            int destino;
+            for(int i=0;i<num_arestas;i++){
+                
+                linha = br.readLine();
+                string_aux=linha.split(" ");
+                origem=Integer.parseInt(string_aux[0]);
+                destino=Integer.parseInt(string_aux[1]);
+                arestas[origem][destino]=Integer.parseInt(string_aux[2]);
+                arestas[destino][origem]=arestas[origem][destino];
+                grau[origem]++;
+                grau[destino]++;
+            }
+        }else{
+            print("arquvo em formato inválido");
+        }
+        br.close();
+        
+        
+        
+//        print("numero de nos : "+num_nos);
+        int melhor_sol=Integer.MAX_VALUE;
+        int[][] melhor_sol_a = new int[num_nos][num_nos];
+
+        
+        int arestas_sol_final[][] = new int[num_nos][num_nos];
+        //for(int i=0;i<num_nos;i++)print("i = "+i+" grau = "+grau[i]);
+        for(int i=0;i<num_nos;i++){
+            for(int j=0;j<num_nos;j++){
+                arestas_sol_final[i][j]=0;
+                //System.out.print(arestas[i][j]+"   ");
+            }
+            //print("");
+        }
+        
+        
+        //inicialização dos ccompnentes
+        int arestas_sol_atual[][] = new int[num_nos][num_nos];
+        int distancias[] = new int[num_nos];
+        int vindo_de[] = new int[num_nos];
+        int total_final=Integer.MAX_VALUE;
+        int total_atual;
+        int inicial=-1;
+        int grau_final[] = new int [num_nos];
+        int presente[]=new int[num_nos];
+        for(int i=0;i<num_nos;i++){
+                grau_final[i]=-1;
+        }
+        
+        //contrução
+        
+        //definição do alpha
+        float alpha=0.3f;
+        int cons=(int) (num_nos*0.10);
+        cons=1;
+//***********************************************************************************************************************************
+        
+        for(int raiz=-1;raiz<num_nos-1;){
+//            tatu=0;
+//            tdiv=0;
+
+            total_final=Integer.MAX_VALUE;
+            
+//          contruções antes da busca = 5% num nos
+//            print("contrução");
+//            long time1=System.currentTimeMillis();
+            for(int w=0;w<cons;w++){
+            raiz++;
+            print("raiz = "+raiz);
+            if(raiz>=num_nos){
+                break;
+            }
+            total_atual=0;
+            
+            for(int i=0;i<num_nos;i++){
+                grau[i]=0;
+                distancias[i]=Integer.MAX_VALUE;
+                vindo_de[i]=-1;
+                presente[i]=0;
+            }
+           //inicializando o vetor de distancias para o nó raiz
+            
+            
+
+            
+            int verif[]= new int[num_nos];
+            for(int i=0;i<num_nos;i++){
+               verif[i]=0;
+                if(arestas[raiz][i]!=-1){
+                    distancias[i]=arestas[raiz][i];
+                }
+                 for(int j=0;j<num_nos;j++){
+                     arestas_sol_atual[i][j]=0;
+                }
+            }
+            distancias[raiz]=-1;
+            
+            //limite da lista de distancias ordenadas
+            presente[raiz]=1;
+            int menor;
+            int indice=-1;
+            int lista_tam=0;
+            int [] ordenados = new int[num_nos];
+            
+            
+            for(int i=0;i<num_nos;i++){
+                menor=Integer.MAX_VALUE;
+                
+                for(int j=0;j<num_nos;j++){
+                    if(menor>distancias[j] && distancias[j]>-1 && presente[j]==0 && verif[j]==0){
+                        menor=distancias[j];
+                        indice=j; 
+                    }
+                }
+                if(menor!=Integer.MAX_VALUE){
+                    ordenados[lista_tam]=indice;
+                    verif[indice]=1;
+                    lista_tam++;
+                    
+                }
+            }
+//            print("cc "+lista_tam);
+            lista_tam=(int) ceil(lista_tam*alpha);
+//            print("lt "+lista_tam);
+            
+            //print("alpha "+alpha);
+            //print("lista tam "+lista_tam);
+            
+//            print(lista_tam);
+            Random pesof = new Random();
+            int sorteio=pesof.nextInt(lista_tam);
+//            print("sor "+sorteio);
+            int proximo= ordenados[sorteio];
+            menor=distancias[proximo];
+            
+            
+            
+            
+            grau[raiz]=1;
+            grau[proximo]=1;
+            distancias[proximo]=0;
+            arestas_sol_atual[raiz][proximo]=1;
+            arestas_sol_atual[proximo][raiz]=1;
+            total_atual=arestas[raiz][proximo];
+            presente[raiz]=1;
+            presente[proximo]=1;
+            for(int i=0;i<num_nos;i++){
+
+                distancias[i]=Integer.MAX_VALUE;
+                if(grau[i]>0){
+                    distancias[i]=-1;
+                }
+            }
+
+
+//            print("pp "+proximo);
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            int selecionados=0 ;
+            while(selecionados<num_nos-2){
+                for(int i=0;i<num_nos;i++){
+                    if(presente[i]==1){
+                        distancias[i]=-1;
+                    }else{
+                        distancias[i]=Integer.MAX_VALUE;
+                    }
+                }
+                for(int i=0;i<num_nos;i++){
+                    for(int j=0;j<num_nos;j++){
+                        
+                        if(distancias[j]==-1){
+                            //já está ana árvore
+                        }else if(grau[i]==1 && (arestas[i][j]+pesos_nos[i])<distancias[j] && arestas[i][j]!=-1 && presente[j]==0 && presente[i]==1){
+                            distancias[j]=arestas[i][j]+pesos_nos[i];
+                            vindo_de[j]=i;
+                        }
+                        else if(grau[i]>1 && (arestas[i][j])<distancias[j] && arestas[i][j]!=-1 && presente[j]==0 && presente[i]==1){
+                            distancias[j]=arestas[i][j];
+                            vindo_de[j]=i;
+                        }
+                    }
+                }
+                //atualização de distancias++++++++++++++
+//                for(int i=0;i<num_nos;i++){
+//                System.out.print(distancias[i]+" ");
+//            }
+//                print("");
+                
+            indice=-1;
+            lista_tam=0;
+            ordenados = new int[num_nos];
+            for(int h=0;h<num_nos;++h){
+                verif[h]=0;
+            }
+            for(int i=0;i<num_nos;i++){
+                menor=Integer.MAX_VALUE;
+                
+                for(int j=0;j<num_nos;j++){
+                    if(menor>distancias[j] && distancias[j]>-1 && presente[j]==0 && verif[j]==0 && presente[i]==1){
+                        menor=distancias[j];
+                        indice=j; 
+                    }
+                }
+                
+                if(menor!=Integer.MAX_VALUE){
+                    ordenados[lista_tam]=indice;
+                    verif[indice]=1;
+                    lista_tam++;
+                    
+                }
+            }
+                
+//                lista_tam=(int)((num_nos-selecionados)*alpha);
+//                print("select "+selecionados);
+//print("lt "+lista_tam);
+//                print("ord 0 "+distancias[ordenados[0]]+" ord max "+distancias[ordenados[lista_tam-1]]);
+                int limite=distancias[ordenados[0]]+(int)ceil((alpha*(distancias[ordenados[lista_tam-1]]-distancias[ordenados[0]])));
+//                print("lm "+limite);
+               
+                int tam=0;
+                for(int i=0;i<lista_tam;i++){
+                    if(distancias[ordenados[i]]<=limite){
+                        tam++;
+                    }
+                }
+                if(limite==0){
+                    tam=1;
+                }
+//                print("tam "+tam);
+                pesof = new Random();
+                
+                sorteio=pesof.nextInt(tam);
+
+                proximo= ordenados[sorteio];
+                menor=distancias[proximo];
+
+//print("sort "+sorteio);
+//                print("p "+proximo);
+//                print("vd "+vindo_de[proximo]);
+                grau[vindo_de[proximo]]+=1;
+                grau[proximo]+=1;
+                distancias[proximo]=0;
+                arestas_sol_atual[vindo_de[proximo]][proximo]=1;
+                arestas_sol_atual[proximo][vindo_de[proximo]]=1;
+                total_atual=total_atual+menor;
+                presente[proximo]=1;
+                for(int i=0;i<num_nos;i++){
+
+                    distancias[i]=Integer.MAX_VALUE;
+                    if(grau[i]>0){
+                        distancias[i]=-1;
+                    }
+                }
+                
+                
+                
+                
+//                selecionados=0;
+//                for(int i=0;i<num_nos;i++){
+//                    if(grau[i]>=1){
+//                        selecionados+=1;
+//                    }
+//                }
+                selecionados++;
+                
+
+            }
+
+                if(total_final>total_atual){
+                    total_final=total_atual;
+
+                    for(int i=0;i<num_nos;i++){
+                        grau_final[i]=grau[i];
+                        for(int j=0;j<num_nos;j++){
+                            arestas_sol_final[i][j]=arestas_sol_atual[i][j];
+                            inicial=raiz;
+                        }
+                    }
+                }
+
+
+
+            }
+        
+//*********************************************************************************************************************************************************
+ 
+//        long time2=System.currentTimeMillis();
+//        long time=time2-time1;
+//        print("tempo_construção="+time);
+//        print("");
+//        print("Resultado   raiz = "+inicial+"       total = "+total_final);
+//        
+//        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+    //*********************************************************************************************************************************************//
+        //inicialização
+//        time1=System.currentTimeMillis(); 
+//        long ww1=System.currentTimeMillis();
+                        
+        int[][] s=new int[num_nos][num_nos];  
+        int[][] s_star=new int[num_nos][num_nos];
+        int[][] s_linha=new int[num_nos][num_nos];
+        int[][] tabela_tabu=new int [num_nos][num_nos];
+        int []grau_s= new int [num_nos];
+        int []grau_star= new int [num_nos];
+        
+        int []v1= new int [num_nos];
+        int []v2= new int [num_nos];
+        int tam=(int)(0.3*num_nos);
+        
+        int remocao_1=-1;
+        int remocao_2=-1;
+        int nova_1=-1;
+        int nova_2=-1;
+        int custo=Integer.MAX_VALUE;
+        int custo_aux=Integer.MAX_VALUE;
+        int remocao_1_asp=-1;
+        int remocao_2_asp=-1;
+        int nova_1_asp=-1;
+        int nova_2_asp=-1;
+        int melhor_iter=0;
+        int iter=0;
+        
+//        long ww2=System.currentTimeMillis();
+//        long ww=ww2-ww1;
+//        print("ww = "+ww);
+                      
+        int custo_asp;
+        int distancias_asp[]=new int [num_nos];
+        int vindo_de_asp[]=new int [num_nos];
+        for(int i=0;i<num_nos;i++){
+            grau_s[i]=grau_final[i];
+            grau_star[i]=grau_final[i];
+            vindo_de[i]=-1;
+            vindo_de_asp[i]=-1;
+            v1[i]=-2;
+            v2[i]=-2;
+            for(int j=0;j<num_nos;j++){
+                s[i][j]=arestas_sol_final[i][j];
+                s_star[i][j]=arestas_sol_final[i][j];
+                tabela_tabu[i][j]=0;
+            }
+        }
+        int s_total=total_final;
+        int s_star_total=total_final;
+        int btmax=(int)0.6*num_nos;
+//        int btmax=4;
+        while((iter-melhor_iter)<=btmax){
+//        while(iter<5){
+            iter++;
+//            print("ssss"+iter);
+//            print("ssssvvv"+melhor_iter);
+            
+            Calendar q1=new GregorianCalendar();  
+            for(int i=0;i<num_nos;i++){
+                for(int j=0;j<num_nos;j++){
+                    s_linha[i][j]=s[i][j];
+                }
+            }
+            //inicio busca local
+            custo=Integer.MAX_VALUE;
+            custo_asp=Integer.MAX_VALUE;
+            Calendar q2=new GregorianCalendar();
+//            Date q=new Date(q2.getTimeInMillis()-q1.getTimeInMillis());
+//            print("var1 = "+q.getTime());
+            for(int i=0;i<num_nos;i++){
+                
+                for(int j=0;j<num_nos;j++){
+                   
+                    if(s_linha[i][j]==1){
+//                        long div1=System.currentTimeMillis(); 
+                        s_linha[i][j]=2;
+                        s_linha[j][i]=2;
+                        grau_s[i]-=1;
+                        grau_s[j]-=1;
+//                        print("i= " +i);
+//                        print("j= " +j);
+                        
+                        
+                        int sep[]=new int[2];
+                        sep[0]=i;
+                        sep[1]=j;
+                        int []sides=new int [num_nos];
+                        
+                        for(int k=0;k<num_nos;k++){
+                            sides[k]=0;
+                        }
+                        
+                        //separa em 2 subgrafos
+                        sides[sep[0]]=1;
+//                        long zzz1=System.currentTimeMillis();
+                        while(true){
+                            
+                            int mudou=0;
+                            for(int k=0;k<num_nos;k++){
+                                if (sides[k]==1){
+                                    for(int l=0;l<num_nos;l++){
+                                        if( sides[l]==0 && s_linha[k][l]==1){
+
+                                            sides[l]=1;
+                                            mudou=1;
+                                        }   
+
+                                    }
+                                }
+                            }
+                            if(mudou==0){
+                                break;
+                            }
+                        }
+//                        long zzz2=System.currentTimeMillis();
+//                        long zzz=zzz2-zzz1;
+//                        print("zzz="+zzz);
+                        //separa am 2 subgrafos fim
+                        
+                        //calcula custo de cada subgrafo - ini
+//                        long ttt1=System.currentTimeMillis();
+                        int sub_1=0;
+                        int sub_2=0;
+                        int[] g_sub_1=new int[num_nos];
+                        int[] g_sub_2=new int[num_nos];
+                        
+                        for(int k=0;k<num_nos;k++){
+                            for(int l=k+1;l<num_nos;l++){
+                                if(sides[k]==1 && sides[l]==1 && s_linha[k][l]==1){
+                                    sub_1+=arestas[k][l];
+                                    g_sub_1[k]+=1;
+                                    g_sub_1[l]+=1;
+                                }
+                                
+                                
+                                if(sides[k]==0 && sides[l]==0 && s_linha[k][l]==1){
+                                    sub_2+=arestas[k][l];
+                                    g_sub_2[k]+=1;
+                                    g_sub_2[l]+=1;
+                                }
+                            }
+                        }
+                        for(int k=0;k<num_nos;k++){
+                            if(g_sub_1[k]>1){
+                                sub_1+=pesos_nos[k];
+                            }
+                            
+                            if(g_sub_2[k]>1){
+                                sub_2+=pesos_nos[k];
+                            }
+                        }
+//                        long ttt2=System.currentTimeMillis();
+//                        long ttt=ttt2-ttt1;
+//                        print("ttt= "+ttt);
+                        
+                        
+                        
+//                        long div2=System.currentTimeMillis();
+//                        long div=div2-div1;
+//                        tdiv+=div;
+                        
+                        //calcula custo de cada subgrafo - fim
+                        
+
+//                        long atu1=System.currentTimeMillis(); 
+                        for(int k=0;k<2;k++){
+                            for(int x=0;x<num_nos;x++){
+                                distancias[x]=Integer.MAX_VALUE;
+                                distancias_asp[x]=Integer.MAX_VALUE;
+                            }
+                            for(int l=0;l<num_nos;l++){
+                                if(sides[sep[k]]==sides[l]){
+                                    distancias[l]=0;
+                                    distancias_asp[l]=0;
+                                }
+                                
+                                if(sides[sep[k]]!=sides[l]){
+                                    if(distancias[l]==0){
+                                        //está do mesmo lado
+                                    }else if(grau_s[sep[k]]==0 && grau_s[l]==0 && (arestas[sep[k]][l])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l];
+                                        vindo_de[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==0 && grau_s[l]==1 && (arestas[sep[k]][l]+pesos_nos[l])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l]+pesos_nos[l];
+                                        vindo_de[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==1 && grau_s[l]==0 && (arestas[sep[k]][l]+pesos_nos[sep[k]])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l]+pesos_nos[sep[k]];
+                                        vindo_de[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==1 && grau_s[l]==1 && (arestas[sep[k]][l]+pesos_nos[sep[k]]+pesos_nos[l])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l]+pesos_nos[sep[k]]+pesos_nos[l];
+                                        vindo_de[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==1 && grau_s[l]>1 && (arestas[sep[k]][l]+pesos_nos[sep[k]])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l]+pesos_nos[sep[k]];
+                                        vindo_de[l]=sep[k];
+                                    }else if(grau_s[sep[k]]>1 && grau_s[l]==1 && (arestas[sep[k]][l]+pesos_nos[l])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l]+pesos_nos[l];
+                                        vindo_de[l]=sep[k];
+                                    }else if(grau_s[sep[k]]>1 && grau_s[l]>1 && (arestas[sep[k]][l])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l];
+                                        vindo_de[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==0 && grau_s[l]>1 && (arestas[sep[k]][l])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l];
+                                        vindo_de[l]=sep[k];
+                                    }else if(grau_s[sep[k]]>1 && grau_s[l]==0 && (arestas[sep[k]][l])<distancias[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2 && tabela_tabu[sep[k]][l]!=3){
+                                        distancias[l]=arestas[sep[k]][l];
+                                        vindo_de[l]=sep[k];
+                                    }
+                                    
+                                    
+                                    if(distancias_asp[l]==0){
+                                        //está do mesmo lado
+                                    }else if(grau_s[sep[k]]==0 && grau_s[l]==0 && (arestas[sep[k]][l])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l];
+                                        vindo_de_asp[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==0 && grau_s[l]==1 && (arestas[sep[k]][l]+pesos_nos[l])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l]+pesos_nos[l];
+                                        vindo_de_asp[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==1 && grau_s[l]==0 && (arestas[sep[k]][l]+pesos_nos[sep[k]])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l]+pesos_nos[sep[k]];
+                                        vindo_de_asp[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==1 && grau_s[l]==1 && (arestas[sep[k]][l]+pesos_nos[sep[k]]+pesos_nos[l])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l]+pesos_nos[sep[k]]+pesos_nos[l];
+                                        vindo_de_asp[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==1 && grau_s[l]>1 && (arestas[sep[k]][l]+pesos_nos[sep[k]])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l]+pesos_nos[sep[k]];
+                                        vindo_de_asp[l]=sep[k];
+                                    }else if(grau_s[sep[k]]>1 && grau_s[l]==1 && (arestas[sep[k]][l]+pesos_nos[l])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l]+pesos_nos[l];
+                                        vindo_de_asp[l]=sep[k];
+                                    }else if(grau_s[sep[k]]>1 && grau_s[l]>1 && (arestas[sep[k]][l])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l];
+                                        vindo_de_asp[l]=sep[k];
+                                    }else if(grau_s[sep[k]]==0 && grau_s[l]>1 && (arestas[sep[k]][l])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l];
+                                        vindo_de_asp[l]=sep[k];
+                                    }else if(grau_s[sep[k]]>1 && grau_s[l]==0 && (arestas[sep[k]][l])<distancias_asp[l] && arestas[sep[k]][l]!=-1 && s_linha[sep[k]][l]!=2){
+                                        distancias_asp[l]=arestas[sep[k]][l];
+                                        vindo_de_asp[l]=sep[k];
+                                    }
+                                    
+                                }
+                            }
+                            
+                            int menor=Integer.MAX_VALUE;
+                            int aux_1=-1;
+                            int aux_2=-1;
+                            int menor_asp=Integer.MAX_VALUE;
+                            int aux_1_asp=-1;
+                            int aux_2_asp=-1;
+                            for(int m=0;m<num_nos;m++){
+                                if(menor>distancias[m] && distancias[m]>1){
+                                    menor=distancias[m];
+                                    aux_1=m;
+                                    aux_2=vindo_de[m];
+                                }
+                                
+                                if(menor_asp>distancias_asp[m] && distancias_asp[m]>1){
+                                    menor_asp=distancias_asp[m];
+                                    aux_1_asp=m;
+                                    aux_2_asp=vindo_de_asp[m];
+                                }
+                            }
+                            
+                            if(custo>sub_1+menor+sub_2 && (aux_1!=-1 && aux_2!=-1)){
+                                nova_1=aux_1;
+                                nova_2=aux_2;
+                                custo=sub_1+menor+sub_2;
+                                remocao_1=sep[0];
+                                remocao_2=sep[1];
+                            }
+                            
+                            if(custo_asp>sub_1+menor_asp+sub_2 && (aux_1_asp!=-1 && aux_2_asp!=-1)){
+                                nova_1_asp=aux_1_asp;
+                                nova_2_asp=aux_2_asp;
+                                custo_asp=sub_1+menor_asp+sub_2;
+                                remocao_1_asp=sep[0];
+                                remocao_2_asp=sep[1];
+                            }
+                        }
+//                        long atu2=System.currentTimeMillis();
+//                        long atu=atu2-atu1;
+//                        tatu+=atu;
+
+                        s_linha[i][j]=1;
+                        s_linha[j][i]=1;
+                        grau_s[i]+=1;
+                        grau_s[j]+=1;
+                    }
+
+                }
+            
+            
+            
+            
+            //fim busca local
+            
+
+            
+            //atualzar lista tabu
+            }
+
+            Calendar ver1=new GregorianCalendar();
+            
+                if(custo<s_star_total){
+//                    print("s_star"+s_star_total);
+//                    print("custo novo"+custo);
+                    s_star_total=custo;
+                    for(int i=0;i<num_nos;i++){
+                        for(int j=0;j<num_nos;j++){
+                            s_star[i][j]=s_linha[i][j];
+                        }
+                    }
+                    melhor_iter=iter;
+                }else if(custo>=s_total){
+                    //adiciona à lista tabu
+                    v1[tam]=nova_1;
+                    v2[tam]=nova_2;
+                    tabela_tabu[nova_1][nova_2]=3;
+                    tabela_tabu[nova_2][nova_1]=3;
+                }
+                
+                if(custo_asp<s_star_total){
+//                    print("star"+s_star_total);
+//                    print("novo custo asp"+custo_asp);
+                    melhor_iter=iter;
+                    s_star_total=custo_asp;
+
+                    for(int i=0;i<num_nos;i++){
+                        for(int j=0;j<num_nos;j++){
+                            s_star[i][j]=s_linha[i][j];
+                        }
+                    }
+                }
+                
+                s_total=custo;
+                s_linha[remocao_1][remocao_2]=0;
+                s_linha[remocao_2][remocao_1]=0;
+                s_linha[nova_1][nova_2]=1;
+                s_linha[nova_2][nova_1]=1;
+                grau_s[nova_1]+=1;
+                grau_s[nova_2]+=1;
+                grau_s[remocao_1]-=1;
+                grau_s[remocao_2]-=1;
+
+            
+            //atualizar lista tabu
+            
+            //primeiro desmarca o item a sair da lista como permitido
+            int aux=0;
+//            for(int i=0;i<tam;i++){
+//                if(v1[i]==-2||v2[i]==-2){
+//                    aux=1;
+//                }
+//            }
+            if(v1[0]==-2||v2[0]==-2){
+                    aux=1;
+                }
+            if(aux!=1){
+                if(v1[0]!=-3){
+                    tabela_tabu[v1[0]][v2[0]]=0;
+                    tabela_tabu[v2[0]][v1[0]]=0;
+                }
+            }
+            for(int i=0;i<=tam;i++){
+                for(int j=1;j<=tam;j++){                    
+                    if( i!= j && v1[i]==v1[j] && v2[i]==v2[j]  || v1[i]==v2[j] && v2[i]==v1[j]){
+                        v1[j]=-3;
+                        v2[j]=-3;
+                    }
+                }
+            }
+
+            
+            for(int i=1;i<=tam;i++){
+                v1[i-1]=v1[i];
+                v2[i-1]=v2[i];
+            }
+   
+//            print("");
+            for(int i=0;i<num_nos;i++){
+                    for(int j=0;j<num_nos;j++){
+                        s[i][j]=s_linha[i][j];
+                    }
+                }
+//            Calendar ver2=new GregorianCalendar();
+//            Date ver=new Date(ver2.getTimeInMillis()-ver1.getTimeInMillis());
+//            print("verif = "+ver.getTime());
+        
+        }
+//        print("total div="+tdiv);
+//        print("total atu="+tatu);
+//        time2=System.currentTimeMillis();
+//        long ime=time2-time1;
+//        tatu=tatu+tdiv;
+//        print("tempo_busca="+ime);
+//        print(s_star_total);
+        if(s_star_total<melhor_sol){
+            melhor_sol=s_star_total;
+            for(int i=0;i<num_nos;i++){
+                for(int j=0;j<num_nos;j++){
+                    melhor_sol_a[i][j]=s_star[i][j];
+                }
+            }
+        }
+        
+    }
+   long tempo=System.currentTimeMillis()-tempoInicio;  
+    print("Sol_final = "+melhor_sol+"   Tempo = "+tempo);
+//    for(int i=0;i<num_nos;i++){
+//        for(int j=0;j<num_nos;j++){
+//            System.out.print(melhor_sol_a[i][j]+" ");
+//        }
+//        print("");
+//    }
+}
+    public static void print(String q){
+        System.out.println(q);
+    }
+    
+    public static void print(int q){
+        System.out.println(q);
+    }
+    
+    public static void print(long q){
+        System.out.println(q);
+    }
+        
+}
